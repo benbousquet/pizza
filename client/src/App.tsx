@@ -1,12 +1,10 @@
-import Header from "./components/Header"
 import Router from "./components/Router"
 
 function App() {
   return (
-    <>
-      <Header />
+    <div className="lg:max-w-6xl mx-auto">
       <Router />
-    </>
+    </div>
   )
 }
 
