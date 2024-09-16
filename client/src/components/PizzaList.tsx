@@ -9,23 +9,6 @@ export type Pizza = {
   toppings: Topping[];
 };
 
-const exampleToppings: Topping[] = [
-  { id: 1, name: "mushrooms" },
-  { id: 2, name: "corn" },
-  { id: 3, name: "ranch" },
-  { id: 4, name: "cheese" },
-];
-
-const examplePizza: Pizza[] = [
-  { id: 1, name: "cheese", toppings: [exampleToppings[3]] },
-  { id: 2, name: "garden", toppings: [...exampleToppings] },
-  {
-    id: 3,
-    name: "korean corn",
-    toppings: [exampleToppings[1], exampleToppings[2], exampleToppings[3]],
-  },
-];
-
 export default function PizzaList() {
   const [pizzas, setPizzas] = useContext(PizzaContext)!;
 
