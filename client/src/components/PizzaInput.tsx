@@ -1,22 +1,23 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Topping } from "./ToppingList";
 import PizzaToppingList from "./PizzaToppingList";
-
-const exampleData: Topping[] = [
-  { id: 1, name: "mushrooms" },
-  { id: 2, name: "corn" },
-  { id: 3, name: "ranch" },
-  { id: 4, name: "cheese" },
-];
+import { Pizza } from "./PizzaList";
+import { PizzaContext } from "./context";
 
 export default function PizzaInput() {
+  const [_pizzas, setPizzas] = useContext(PizzaContext)!;
   const [name, setName] = useState("");
   const [selectedToppings, setSelectedToppings] = useState<Topping[]>([]);
   const [toppings, setToppings] = useState<Topping[]>([]);
 
   useEffect(() => {
-    // MAKE CALL
-    setToppings(exampleData);
+    // make API call
+    async function fetchData() {
+      const res = await fetch("/api/topping");
+      const json = await res.json();
+      setToppings(json);
+    }
+    fetchData();
   }, []);
 
   return (
@@ -45,11 +46,26 @@ export default function PizzaInput() {
       />
       <button
         disabled={name === "" || selectedToppings.length === 0}
-        onClick={() => {
+        onClick={async () => {
+          const newPizza: Pizza = {
+            id: Math.floor(Math.random() * 1000000),
+            name,
+            toppings: selectedToppings,
+          };
           // Make API call
+          await fetch("/api/pizza", {
+            method: "POST",
+            body: JSON.stringify(newPizza),
+          });
           setSelectedToppings([]);
           setName("");
-          setToppings(exampleData);
+          let res = await fetch("/api/topping");
+          let json = await res.json();
+          setToppings(json);
+
+          res = await fetch("/api/pizza");
+          json = await res.json();
+          setPizzas(json);
         }}
         className="btn btn-success w-28 text-white"
       >

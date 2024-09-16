@@ -32,18 +32,31 @@ export default function Router() {
                 Chef View
               </button>
             </li>
+            <li>
+              <button className="btn" onClick={() => setView(ViewState.None)}>
+                Home View
+              </button>
+            </li>
           </ul>
         </div>
       </div>
 
       <div className="lg:max-w-5xl mx-auto">
         <h2 className="text-4xl">
-            {view === ViewState.Topping && "Owner View"}
-            {view === ViewState.Pizza && "Chef View"}
-            {view === ViewState.None && "Please select a View above"}
+          {view === ViewState.Topping && "Owner View"}
+          {view === ViewState.Pizza && "Chef View"}
+          {view === ViewState.None && "Please select a View above"}
         </h2>
         {view === ViewState.Pizza && <PizzaView />}
         {view === ViewState.Topping && <ToppingView />}
+        {view === ViewState.None && (
+          <button
+            onClick={() => fetch("/api/reset", { method: "POST" })}
+            className="btn btn-error"
+          >
+            Reset data
+          </button>
+        )}
       </div>
     </>
   );

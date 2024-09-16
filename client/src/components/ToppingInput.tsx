@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { ToppingContext } from "./context";
 
 export default function ToppingInput() {
   const [name, setName] = useState("");
+  const [_toppingList, setToppingList] = useContext(ToppingContext)!;
   return (
     <div className="flex flex-col">
       <h3 className="text-3xl font-bold">Add new topping</h3>
@@ -19,10 +21,24 @@ export default function ToppingInput() {
             className="input input-bordered w-full max-w-xs"
           />
         </label>
-        <button onClick={() => {
-          // MAKE API REQUEST
-          setName("");
-        }} className="btn btn-success text-white">Add Topping</button>
+        <button
+          onClick={async () => {
+            let res = await fetch("/api/topping", {
+              method: "POST",
+              body: JSON.stringify({
+                id: Math.floor(Math.random() * 1000000),
+                name,
+              }),
+            });
+            res = await fetch("/api/topping");
+            const json = await res.json();
+            setToppingList(json);
+            setName("");
+          }}
+          className="btn btn-success text-white"
+        >
+          Add Topping
+        </button>
       </div>
     </div>
   );

@@ -1,4 +1,6 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { serveStatic } from "hono/bun";
 
 export type Topping = {
   id: number;
@@ -59,6 +61,8 @@ function addTopping(newTopping: Topping): boolean {
 function updatePizza(newPizza: Pizza): boolean {
   const idx = pizzaList.findIndex((pizza) => newPizza.id === pizza.id);
   if (idx === -1) return false;
+  const idx2 = pizzaList.findIndex((pizza) => (newPizza.name === pizza.name && newPizza.id !== pizza.id));
+  if (idx2 !== -1) return false;
   pizzaList[idx] = newPizza;
   return true;
 }
@@ -66,6 +70,8 @@ function updatePizza(newPizza: Pizza): boolean {
 function updateTopping(newTopping: Topping) {
   const idx = toppingList.findIndex((topping) => newTopping.id === topping.id);
   if (idx === -1) return false;
+  const idx2 = toppingList.findIndex((topping) => (topping.name === newTopping.name && topping.id !== newTopping.id));
+  if (idx2 !== -1) return false;
   toppingList[idx] = newTopping;
   // update all pizzas
   pizzaList.forEach((pizza, idx) => {
@@ -94,14 +100,18 @@ function deleteTopping(id: number) {
   });
 }
 
-const app = new Hono().basePath("/api");
+const app = new Hono();
 
-app.get("/ping", (c) => c.json({ msg: "pong" }));
+app.use("/*", serveStatic({ root: "../client/dist" }));
 
-app.get("/pizza", (c) => c.json(pizzaList));
-app.get("/topping", (c) => c.json(toppingList));
+app.use("/api/*", cors());
 
-app.post("/reset", (c) => {
+app.get("/api/ping", (c) => c.json({ msg: "pong" }));
+
+app.get("/api/pizza", (c) => c.json(pizzaList));
+app.get("/api/topping", (c) => c.json(toppingList));
+
+app.post("/api/reset", (c) => {
   toppingList = [
     { id: 1, name: "mushrooms" },
     { id: 2, name: "corn" },
@@ -122,7 +132,7 @@ app.post("/reset", (c) => {
   return c.json({ message: "Reset all data" }, 201);
 });
 
-app.post("/pizza", async (c) => {
+app.post("/api/pizza", async (c) => {
   const body = await c.req.json();
   if (!isPizza(body)) return c.json({ message: "Invalid body" }, 400);
   const newPizza: Pizza = body;
@@ -132,7 +142,7 @@ app.post("/pizza", async (c) => {
   return c.json({ message: "Added pizza" }, 201);
 });
 
-app.post("/topping", async (c) => {
+app.post("/api/topping", async (c) => {
   const body = await c.req.json();
   if (!isTopping(body)) return c.json({ message: "Invalid body" }, 400);
   const newTopping: Topping = body;
@@ -142,7 +152,7 @@ app.post("/topping", async (c) => {
   return c.json({ message: "Added topping" }, 201);
 });
 
-app.patch("/pizza", async (c) => {
+app.patch("/api/pizza", async (c) => {
   const body = await c.req.json();
   if (!isPizza(body)) return c.json({ message: "Invalid body" }, 400);
   const newPizza: Pizza = body;
@@ -152,7 +162,7 @@ app.patch("/pizza", async (c) => {
   return c.json({ message: "Modified pizza" }, 201);
 });
 
-app.patch("/topping", async (c) => {
+app.patch("/api/topping", async (c) => {
   const body = await c.req.json();
   if (!isTopping(body)) return c.json({ message: "Invalid body" }, 400);
   const newTopping: Topping = body;
@@ -162,14 +172,14 @@ app.patch("/topping", async (c) => {
   return c.json({ message: "Modified topping" }, 201);
 });
 
-app.delete("/pizza", async (c) => {
+app.delete("/api/pizza", async (c) => {
   const body = await c.req.json();
   if (!body.id) return c.json({ message: "Invalid body" }, 400);
   deletePizza(body.id);
   return c.json({ message: "Deleted pizza" }, 201);
 });
 
-app.delete("/topping", async (c) => {
+app.delete("/api/topping", async (c) => {
   const body = await c.req.json();
   if (!body.id) return c.json({ message: "Invalid body" }, 400);
   deleteTopping(body.id);

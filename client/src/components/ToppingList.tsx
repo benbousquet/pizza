@@ -1,61 +1,91 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { ToppingContext } from "./context";
 
 export type Topping = {
   id: number;
   name: string;
 };
 
-const exampleData: Topping[] = [
-  { id: 1, name: "mushrooms" },
-  { id: 2, name: "corn" },
-  { id: 3, name: "ranch" },
-  { id: 4, name: "cheese" },
-];
 export default function ToppingList() {
-  const [toppingList, setToppingList] = useState<Topping[]>([]);
+  const [toppingList, setToppingList] = useContext(ToppingContext)!;
 
   useEffect(() => {
     // make API call
-    setToppingList(exampleData);
-  }, [])
+    async function fetchData() {
+      const res = await fetch("/api/topping");
+      const json = await res.json();
+      setToppingList(json);
+    }
+    fetchData();
+  }, []);
 
   return (
     <div className="space-y-4">
       <h3 className="text-3xl font-bold">All toppings</h3>
       <div className="flex flex-col space-y-2">
         {toppingList.map((topping) => {
-          return <ListItem topping={topping} />;
+          return <ListItem topping={topping} key={topping.id} />;
         })}
       </div>
     </div>
   );
 }
 
-function ListItem({ topping }: { topping: Topping }) {
-  const [isEditting, setIsEditting] = useState(false);
-  const [name, setName] = useState(topping.name);
+function UpdateInput({
+  name,
+  topping,
+  setToppingList,
+  setIsEditting,
+  setName,
+}: {
+  name: string;
+  topping: Topping;
+  setToppingList: (toppings: Topping[]) => void;
+  setIsEditting: (newVal: boolean) => void;
+  setName: (newName: string) => void;
+}) {
+  return (
+    <div className="flex flex-row space-x-2">
+      <input
+        value={name}
+        onChange={(e) => {
+          setName(e.target.value);
+        }}
+        className="input input-bordered"
+      ></input>
+      <button
+        className="btn btn-success text-white"
+        onClick={async () => {
+          let newToppings = topping;
+          newToppings.name = name;
 
-  function UpdateInput() {
-    return (
-      <div className="flex flex-row space-x-2">
-        <input
-          name="Topping Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="input input-bordered"
-        ></input>
-        <button
-          className="btn btn-success text-white"
-          onClick={() => {
-            //!! MAKE API CALL HERE
-            setIsEditting(false);
-          }}
-        >
-          Save
-        </button>
-      </div>
-    );
-  }
+          await fetch("/api/topping", {
+            method: "PATCH",
+            body: JSON.stringify(newToppings),
+          });
+
+          const res = await fetch("/api/topping");
+          const json = await res.json();
+          setToppingList(json);
+
+          setIsEditting(false);
+        }}
+      >
+        Save
+      </button>
+    </div>
+  );
+}
+
+function ListItem({ topping }: { topping: Topping }) {
+  const [_toppingList, setToppingList] = useContext(ToppingContext)!;
+
+  const [isEditting, setIsEditting] = useState(false);
+  const [name, setName] = useState("");
+
+  useEffect(() => {
+    setName(topping.name);
+  }, []);
 
   return (
     <div
@@ -65,12 +95,27 @@ function ListItem({ topping }: { topping: Topping }) {
       {!isEditting ? (
         <p className="text-xl font-semibold ml-2">{topping.name}</p>
       ) : (
-        <UpdateInput />
+        <UpdateInput
+          name={name}
+          topping={topping}
+          setToppingList={setToppingList}
+          setIsEditting={setIsEditting}
+          setName={setName}
+        />
       )}
       <div className="space-x-2">
         <button
-          onClick={() => {
-            // MAKE API CALL HERE
+          onClick={async () => {
+            await fetch("/api/topping", {
+              method: "DELETE",
+              body: JSON.stringify({
+                id: topping.id,
+              }),
+            });
+
+            const res = await fetch("/api/topping");
+            const json = await res.json();
+            setToppingList(json);
           }}
           className="btn btn-error"
         >
