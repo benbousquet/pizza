@@ -4,6 +4,7 @@ COPY . .
 WORKDIR /usr/src/app/api
 RUN bun install
 WORKDIR /usr/src/app/client
+RUN bun install
 RUN bun run build
 WORKDIR /usr/src/app/api
 EXPOSE 3000
